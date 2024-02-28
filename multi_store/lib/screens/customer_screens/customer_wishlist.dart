@@ -7,60 +7,58 @@ class CustomerWishlistScreen extends StatelessWidget {
   const CustomerWishlistScreen({super.key});
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.grey.shade200,
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text(
-            "Wishlist",
-            style: TextStyle(
-              fontFamily: 'Acme',
-              fontSize: 28,
-              letterSpacing: 1.5,
-            ),
+    return Scaffold(
+      backgroundColor: Colors.grey.shade200,
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          "Wishlist",
+          style: TextStyle(
+            fontFamily: 'Acme',
+            fontSize: 28,
+            letterSpacing: 1.5,
           ),
-          actions: [
-            context.watch<WishList>().getWishListItems.isEmpty
-                ? const SizedBox()
-                : IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Clear WishList"),
-                            content: const Text("Are you sure ? "),
-                            actions: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("No"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  context.read<WishList>().clearWishList();
-                                },
-                                child: const Text("Yes"),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.delete_forever,
-                      size: 30,
-                    ),
-                  ),
-          ],
         ),
-        body: context.watch<WishList>().getWishListItems.isNotEmpty
-            ? const WishListItems()
-            : const EmptyWishList(),
+        actions: [
+          context.watch<WishList>().getWishListItems.isEmpty
+              ? const SizedBox()
+              : IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text("Clear WishList"),
+                          content: const Text("Are you sure ? "),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text("No"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                context.read<WishList>().clearWishList();
+                              },
+                              child: const Text("Yes"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.delete_forever,
+                    size: 30,
+                  ),
+                ),
+        ],
       ),
+      body: context.watch<WishList>().getWishListItems.isNotEmpty
+          ? const WishListItems()
+          : const EmptyWishList(),
     );
   }
 }

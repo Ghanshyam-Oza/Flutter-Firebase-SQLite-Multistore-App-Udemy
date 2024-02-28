@@ -12,18 +12,65 @@ import 'package:provider/provider.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_tile.dart';
 import 'package:collection/collection.dart';
+import 'package:expandable/expandable.dart';
 
-class ProductDetailsScreen extends StatelessWidget {
+class ProductDetailsScreen extends StatefulWidget {
   final dynamic products;
   const ProductDetailsScreen({super.key, required this.products});
+
+  @override
+  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+}
+
+class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  double avgRating = 0;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getAvgRating();
+  }
+
+  void getAvgRating() {
+    setState(() {
+      isLoading = true;
+    });
+    FirebaseFirestore.instance
+        .collection('products')
+        .doc(widget.products['productid'])
+        .collection('reviews')
+        .get()
+        .then((value) {
+      value.docs.forEach((element) {
+        avgRating += element['rate'];
+      });
+      setState(() {
+        avgRating = avgRating != 0 ? avgRating / value.docs.length : 0;
+        isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final Stream<QuerySnapshot> productsStream = FirebaseFirestore.instance
         .collection('products')
-        .where('mainCat', isEqualTo: products['mainCat'])
-        .where('subCat', isEqualTo: products['subCat'])
+        .where('mainCat', isEqualTo: widget.products['mainCat'])
+        .where('subCat', isEqualTo: widget.products['subCat'])
         .snapshots();
+    final Stream<QuerySnapshot> reviewStream = FirebaseFirestore.instance
+        .collection('products')
+        .doc(widget.products['productid'])
+        .collection('reviews')
+        .snapshots();
+    final Stream<QuerySnapshot> reviewStreamLimited = FirebaseFirestore.instance
+        .collection('products')
+        .doc(widget.products['productid'])
+        .collection('reviews')
+        .limit(2)
+        .snapshots();
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -39,7 +86,7 @@ class ProductDetailsScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => FullScreenProductView(
-                          imageList: products['productimages'],
+                          imageList: widget.products['productimages'],
                         ),
                       ),
                     );
@@ -53,10 +100,10 @@ class ProductDetailsScreen extends StatelessWidget {
                           itemBuilder: (context, index) {
                             return Image(
                               image: NetworkImage(
-                                  products['productimages'][index]),
+                                  widget.products['productimages'][index]),
                             );
                           },
-                          itemCount: products['productimages'].length,
+                          itemCount: widget.products['productimages'].length,
                         ),
                       ),
                       Positioned(
@@ -85,11 +132,12 @@ class ProductDetailsScreen extends StatelessWidget {
                 ),
                 Center(
                   child: Text(
-                    products['productname'],
+                    widget.products['productname'],
                     style: const TextStyle(
                         fontSize: 22, fontWeight: FontWeight.w500),
                   ),
                 ),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -98,17 +146,41 @@ class ProductDetailsScreen extends StatelessWidget {
                         const Text(
                           "USD ",
                           style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600),
+                            fontSize: 22,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        Text(
-                          products['price'].toStringAsFixed(2),
-                          style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600),
-                        ),
+                        widget.products['discount'] == 0
+                            ? Text(
+                                widget.products['price'].toStringAsFixed(2),
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : Text(
+                                widget.products['price'].toStringAsFixed(2),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                        const SizedBox(width: 5),
+                        widget.products['discount'] == 0
+                            ? const SizedBox()
+                            : Text(
+                                ((1 - widget.products['discount'] / 100) *
+                                        widget.products['price'])
+                                    .toStringAsFixed(2),
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ],
                     ),
                     IconButton(
@@ -118,26 +190,29 @@ class ProductDetailsScreen extends StatelessWidget {
                                     .getWishListItems
                                     .firstWhereOrNull((item) =>
                                         item.documentId ==
-                                        products['productid']) !=
+                                        widget.products['productid']) !=
                                 null
                             ? context
                                 .read<WishList>()
-                                .removeThis(products['productid'])
+                                .removeThis(widget.products['productid'])
                             : context.read<WishList>().addWishListItem(
-                                products['productname'],
-                                products['price'],
+                                widget.products['productname'],
+                                widget.products['discount'] != 0
+                                    ? ((1 - widget.products['discount'] / 100) *
+                                        widget.products['price'])
+                                    : widget.products['price'],
                                 1,
-                                products['instock'],
-                                products['productimages'],
-                                products['productid'],
-                                products['sid']);
+                                widget.products['instock'],
+                                widget.products['productimages'],
+                                widget.products['productid'],
+                                widget.products['sid']);
                       },
                       icon: context
                                   .watch<WishList>()
                                   .getWishListItems
                                   .firstWhereOrNull((item) =>
                                       item.documentId ==
-                                      products['productid']) !=
+                                      widget.products['productid']) !=
                               null
                           ? const Icon(
                               Icons.favorite,
@@ -152,7 +227,7 @@ class ProductDetailsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                products['instock'] == 0.0
+                widget.products['instock'] == 0.0
                     ? const Text(
                         "This product is out of stock. ",
                         style: TextStyle(
@@ -161,7 +236,7 @@ class ProductDetailsScreen extends StatelessWidget {
                         ),
                       )
                     : Text(
-                        "${products['instock']} pieces available in stock. ",
+                        "${widget.products['instock']} pieces available in stock. ",
                         style: const TextStyle(
                           color: Colors.blueGrey,
                           fontSize: 18,
@@ -181,9 +256,13 @@ class ProductDetailsScreen extends StatelessWidget {
                   height: 5,
                 ),
                 Text(
-                  products['productdesc'],
+                  widget.products['productdesc'],
                   style: const TextStyle(fontSize: 18),
                 ),
+                const SizedBox(
+                  height: 20,
+                ),
+                reviews(reviewStreamLimited, reviewStream),
                 const SizedBox(
                   height: 30,
                 ),
@@ -256,8 +335,8 @@ class ProductDetailsScreen extends StatelessWidget {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                VisitStoreScreen(supplierId: products['sid'])));
+                            builder: (context) => VisitStoreScreen(
+                                supplierId: widget.products['sid'])));
                   },
                   icon: const Icon(Icons.store),
                 ),
@@ -299,31 +378,35 @@ class ProductDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(25)),
               child: MaterialButton(
                 onPressed: () {
-                  products['instock'] == 0
+                  widget.products['instock'] == 0
                       ? MySnackBar.showSnackBar(
                           context: context,
                           content: "This item is out of stock.")
                       : context.read<Cart>().getItems.firstWhereOrNull(
                                   (product) =>
-                                      products['productid'] ==
+                                      widget.products['productid'] ==
                                       product.documentId) !=
                               null
                           ? MySnackBar.showSnackBar(
                               context: context,
                               content: "Item is already in cart.")
                           : context.read<Cart>().addItem(
-                                products['productname'],
-                                products['price'],
+                                widget.products['productname'],
+                                widget.products['discount'] != 0
+                                    ? ((1 - widget.products['discount'] / 100) *
+                                        widget.products['price'])
+                                    : widget.products['price'],
                                 1,
-                                products['instock'],
-                                products['productimages'],
-                                products['productid'],
-                                products['sid'],
+                                widget.products['instock'],
+                                widget.products['productimages'],
+                                widget.products['productid'],
+                                widget.products['sid'],
                               );
                 },
                 child: context.read<Cart>().getItems.firstWhereOrNull(
                             (product) =>
-                                products['productid'] == product.documentId) !=
+                                widget.products['productid'] ==
+                                product.documentId) !=
                         null
                     ? const Text(
                         "ADDED TO CART",
@@ -342,6 +425,95 @@ class ProductDetailsScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget reviews(var reviewStreamLimited, var reviewStream) {
+    return Stack(
+      children: [
+        Positioned(
+            top: 8,
+            right: 40,
+            child: Text(
+              "Average Ratings: ${avgRating.toStringAsFixed(1)}",
+              style: const TextStyle(fontSize: 16),
+            )),
+        ExpandablePanel(
+          header: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+            child: Text(
+              "Reviews",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+            ),
+          ),
+          collapsed: reviewsAll(reviewStreamLimited),
+          expanded: reviewsAll(reviewStream),
+        ),
+      ],
+    );
+  }
+
+  Widget reviewsAll(var reviewStream) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: reviewStream,
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot2) {
+        if (snapshot2.hasError) {
+          MySnackBar.showSnackBar(
+              context: context, content: 'Something went wrong');
+        }
+
+        if (snapshot2.connectionState == ConnectionState.waiting ||
+            isLoading == true) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Colors.yellow,
+            ),
+          );
+        }
+
+        if (snapshot2.data!.docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: Center(
+              child: Text(
+                "There is not any review for this item.",
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: snapshot2.data!.docs.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              leading: CircleAvatar(
+                  backgroundImage: NetworkImage(
+                      snapshot2.data!.docs[index]['profileimage'])),
+              title: Text(snapshot2.data!.docs[index]['name']),
+              subtitle: Text(snapshot2.data!.docs[index]['comment']),
+              trailing: SizedBox(
+                width: 55,
+                child: Row(
+                  children: [
+                    Text(
+                      snapshot2.data!.docs[index]['rate'].toString(),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    const Icon(Icons.star, color: Colors.amber),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

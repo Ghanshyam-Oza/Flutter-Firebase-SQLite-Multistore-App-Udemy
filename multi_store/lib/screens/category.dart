@@ -8,8 +8,8 @@ List<ItemData> items = [
   ItemData(label: "Men"),
   ItemData(label: "Women"),
   ItemData(label: "Shoes"),
-  ItemData(label: "Electronics"),
-  ItemData(label: "Accessories"),
+  ItemData(label: "Electro-\nnics"),
+  ItemData(label: "Accesso-\nries"),
   ItemData(label: "Bags"),
   ItemData(label: "Home & \nGarden"),
   ItemData(label: "Kids"),
@@ -68,35 +68,36 @@ class _CategoryScreenState extends State<CategoryScreen> {
       height: size.height * 0.82,
       width: size.width * 0.20,
       child: ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (ctx, index) {
-            return InkWell(
-              onTap: () {
-                _pageController.animateToPage(index,
-                    duration: const Duration(milliseconds: 100),
-                    curve: Curves.bounceInOut);
-              },
-              child: Container(
-                width: double.infinity,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: items[index].isSelected == true
-                      ? Colors.white
-                      : Colors.yellow.shade400,
-                ),
-                child: Center(
-                  child: Text(
-                    items[index].label,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: items[index].isSelected
-                            ? const Color.fromARGB(255, 87, 87, 87)
-                            : Colors.black),
-                  ),
+        itemCount: items.length,
+        itemBuilder: (ctx, index) {
+          return InkWell(
+            onTap: () {
+              _pageController.animateToPage(index,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.bounceInOut);
+            },
+            child: Container(
+              width: double.infinity,
+              height: 100,
+              decoration: BoxDecoration(
+                color: items[index].isSelected == true
+                    ? Colors.white
+                    : Colors.yellow.shade400,
+              ),
+              child: Center(
+                child: Text(
+                  items[index].label,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: items[index].isSelected
+                          ? const Color.fromARGB(255, 87, 87, 87)
+                          : Colors.black),
                 ),
               ),
-            );
-          }),
+            ),
+          );
+        },
+      ),
     );
   }
 

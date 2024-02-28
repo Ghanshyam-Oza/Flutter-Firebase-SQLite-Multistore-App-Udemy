@@ -1,3 +1,0 @@
-Notes
-
-- Remaining to add limit to add quantity in cart page.

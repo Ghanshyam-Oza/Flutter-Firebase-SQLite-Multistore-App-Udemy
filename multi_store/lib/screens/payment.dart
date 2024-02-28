@@ -1,15 +1,20 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:multi_store/providers/cart_provider.dart';
+import 'package:multi_store/providers/stripe.dart';
 import 'package:multi_store/widgets/appbar_title.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:http/http.dart' as http;
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -206,7 +211,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               decoration: BoxDecoration(color: Colors.grey.shade200),
               child: MaterialButton(
                 color: Colors.yellow,
-                onPressed: () {
+                onPressed: () async {
                   if (selectedValue == 1) {
                     showModalBottomSheet(
                       context: context,
@@ -306,7 +311,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       },
                     );
                   } else if (selectedValue == 2) {
-                    print("Visa");
+                    await stripeMakePayment();
                   } else if (selectedValue == 3) {
                     print("Paypal");
                   }
@@ -325,5 +330,64 @@ class _PaymentScreenState extends State<PaymentScreen> {
         );
       },
     );
+  }
+
+  Future<void> stripeMakePayment() async {
+    try {
+      Map<String, dynamic>? paymentIntent;
+      paymentIntent = await createPaymentIntent('10000', 'INR');
+
+      var gpay = const PaymentSheetGooglePay(
+          merchantCountryCode: "IN", currencyCode: "INR", testEnv: true);
+
+      //STEP 2: Initialize Payment Sheet
+      await Stripe.instance
+          .initPaymentSheet(
+              paymentSheetParameters: SetupPaymentSheetParameters(
+                  paymentIntentClientSecret: paymentIntent![
+                      'client_secret'], //Gotten from payment intent
+                  style: ThemeMode.light,
+                  merchantDisplayName: 'Abhi',
+                  googlePay: gpay))
+          .then((value) {});
+
+      //STEP 3: Display Payment sheet
+      displayPaymentSheet();
+    } catch (err) {
+      print(err);
+    }
+  }
+
+  displayPaymentSheet() async {
+    try {
+      await Stripe.instance.presentPaymentSheet().then((e) {
+        Stripe.instance.confirmPaymentSheetPayment();
+      });
+    } catch (e) {
+      print('$e');
+    }
+  }
+
+//create Payment
+  createPaymentIntent(String amount, String currency) async {
+    try {
+      Map<String, dynamic> body = {
+        'amount': amount,
+        'currency': currency,
+        'payment_method_types[]': 'card',
+      };
+
+      var response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        headers: {
+          'Authorization': 'Bearer $stripeSecretkey',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body,
+      );
+      return json.decode(response.body);
+    } catch (err) {
+      throw Exception(err.toString());
+    }
   }
 }

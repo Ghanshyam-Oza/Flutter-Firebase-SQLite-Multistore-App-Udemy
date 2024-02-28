@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:multi_store/minor_screens/edit_store.dart';
 import 'package:multi_store/models/product_model.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
@@ -91,7 +92,13 @@ class _VisitStoreScreenState extends State<VisitStoreScreen> {
                           child: data['sid'] ==
                                   FirebaseAuth.instance.currentUser!.uid
                               ? GestureDetector(
-                                  onTap: () {},
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                EditStore(data: data)));
+                                  },
                                   child: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [

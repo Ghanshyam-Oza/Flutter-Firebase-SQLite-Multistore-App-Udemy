@@ -5,9 +5,14 @@ import 'package:multi_store/models/customer_order_model.dart';
 import 'package:multi_store/widgets/appbar_title.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 
-class CustomerOrdersScreen extends StatelessWidget {
+class CustomerOrdersScreen extends StatefulWidget {
   const CustomerOrdersScreen({super.key});
 
+  @override
+  State<CustomerOrdersScreen> createState() => _CustomerOrdersScreenState();
+}
+
+class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,19 +1,26 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:multi_store/providers/cart_provider.dart';
+import 'package:multi_store/providers/stripe.dart';
 import 'package:multi_store/providers/wish_list_provider.dart';
 import 'package:multi_store/screens/auth/customer_login.dart';
 import 'package:multi_store/screens/auth/customer_signup.dart';
 import 'package:multi_store/screens/auth/supplier_login.dart';
 import 'package:multi_store/screens/auth/supplier_signup.dart';
 import 'package:multi_store/screens/customer_home.dart';
+import 'package:multi_store/screens/onbording_screen.dart';
 import 'package:multi_store/screens/supplier_home.dart';
 import 'package:multi_store/screens/welcome.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = stripePublishableKey;
+  Stripe.merchantIdentifier = 'merchant.flutter.stripe.test';
+  Stripe.urlScheme = 'flutterstripe';
   WidgetsFlutterBinding.ensureInitialized();
   Platform.isAndroid
       ? await Firebase.initializeApp(
@@ -44,9 +51,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/welcome_screen',
+      initialRoute: '/onboarding_screen',
       routes: {
         '/welcome_screen': (context) => const WelcomeScreen(),
+        '/onboarding_screen': (context) => const OnBoardingPage(),
         '/supplier_home': (context) => const SupplierHomeScreen(),
         '/customer_home': (context) => const CustomerHomeScreen(),
         '/customer_signup': (context) => const CustomerSignUpScreen(),

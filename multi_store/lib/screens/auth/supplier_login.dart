@@ -2,6 +2,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:multi_store/minor_screens/forgot_password.dart';
+import 'package:multi_store/providers/auth_repo.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 
 class SupplierLoginScreen extends StatefulWidget {
@@ -17,6 +19,7 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late String email;
   late String password;
+  bool isSentEmailVerification = false;
 
   void onSubmit() async {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -26,15 +29,23 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
         setState(() {
           isLogin = true;
         });
-        await FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
 
-        _formKey.currentState!.reset();
-        setState(() {
-          isLogin = false;
-        });
-
-        Navigator.pushReplacementNamed(context, "/supplier_home");
+        AuthRepo.signInWithEmailAndPassword(email, password);
+        await AuthRepo.updateUserData();
+        if (await AuthRepo.checkEmailVerification()) {
+          _formKey.currentState!.reset();
+          setState(() {
+            isLogin = false;
+          });
+          Navigator.pushReplacementNamed(context, "/supplier_home");
+        } else {
+          MySnackBar.showSnackBar(
+              context: context, content: "Please Check your Inbox");
+          setState(() {
+            isSentEmailVerification = true;
+            isLogin = false;
+          });
+        }
       } on FirebaseAuthException catch (error) {
         setState(() {
           isLogin = false;
@@ -48,7 +59,7 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
         MySnackBar.showSnackBar(
             context: context,
             content: 'Something went wrong. Please try again later.');
-        print(error.toString());
+        print("ERROR:: ${error.toString()}");
       }
     }
   }
@@ -57,7 +68,8 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // backgroundColor: const Color.fromARGB(255, 255, 239, 98),
-      backgroundColor: Colors.grey,
+      // backgroundColor: Colors.grey,
+      backgroundColor: const Color.fromARGB(255, 210, 210, 210),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -68,7 +80,7 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
               height: MediaQuery.of(context).size.height * 0.8,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -97,6 +109,22 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
                       ],
                     ),
                   ),
+                  isSentEmailVerification
+                      ? ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              await FirebaseAuth.instance.currentUser!
+                                  .sendEmailVerification()
+                                  .whenComplete(() => MySnackBar.showSnackBar(
+                                      context: context,
+                                      content:
+                                          "Varification Email is Sent. Check your inbox."));
+                            } catch (err) {
+                              print(err);
+                            }
+                          },
+                          child: const Text("Resend Email Varification"))
+                      : const SizedBox(),
                   Form(
                     key: _formKey,
                     child: Padding(
@@ -109,7 +137,7 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
                               hintText: 'Enter your email address',
                               border: OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
+                                    BorderRadius.all(Radius.circular(8.0)),
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
@@ -145,7 +173,7 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
                               ),
                               border: const OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
+                                    BorderRadius.all(Radius.circular(8.0)),
                               ),
                             ),
                             keyboardType: TextInputType.text,
@@ -163,7 +191,13 @@ class _SupplierLoginScreenState extends State<SupplierLoginScreen> {
                             },
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPassword()));
+                            },
                             child: const Text("Forget Password ?"),
                           ),
                           Row(

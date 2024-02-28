@@ -73,105 +73,109 @@ class CartModel extends StatelessWidget {
                                         onPressed: () {
                                           // cart.removeProduct(product);
                                           showModalBottomSheet(
-                                              backgroundColor: Colors.white,
-                                              context: context,
-                                              builder: (context) {
-                                                return Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    vertical: 20.0,
-                                                    horizontal: 10.0,
-                                                  ),
-                                                  child: Container(
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height *
-                                                            0.25,
-                                                    width: double.infinity,
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                        topLeft:
-                                                            Radius.circular(10),
-                                                        topRight:
-                                                            Radius.circular(10),
-                                                      ),
+                                            backgroundColor: Colors.white,
+                                            context: context,
+                                            builder: (context) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  vertical: 20.0,
+                                                  horizontal: 10.0,
+                                                ),
+                                                child: Container(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.26,
+                                                  width: double.infinity,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                      topLeft:
+                                                          Radius.circular(10),
+                                                      topRight:
+                                                          Radius.circular(10),
                                                     ),
-                                                    child: Column(
-                                                      children: [
-                                                        const Text(
-                                                          "Delete Item ?",
-                                                          style: TextStyle(
-                                                              fontSize: 22,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 10,
-                                                        ),
-                                                        ModalBottomSheetButton(
-                                                            label:
-                                                                'Move to Wishlist',
-                                                            onPressed: () {
-                                                              context.read<WishList>().getWishListItems.firstWhereOrNull((item) =>
-                                                                          item.documentId ==
-                                                                          product
-                                                                              .documentId) !=
-                                                                      null
-                                                                  ? null
-                                                                  : context
-                                                                      .read<
-                                                                          WishList>()
-                                                                      .addWishListItem(
-                                                                        product
-                                                                            .name,
-                                                                        product
-                                                                            .price,
-                                                                        product
-                                                                            .orderedQuantity,
-                                                                        product
-                                                                            .totalQuantity,
-                                                                        product
-                                                                            .imageUrl,
-                                                                        product
-                                                                            .documentId,
-                                                                        product
-                                                                            .supplierId,
-                                                                      );
-
-                                                              context
-                                                                  .read<Cart>()
-                                                                  .removeProduct(
-                                                                      product);
-                                                              Navigator.pop(
-                                                                  context);
-                                                            }),
-                                                        ModalBottomSheetButton(
-                                                          label: 'Delete Item',
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      const Text(
+                                                        "Delete Item ?",
+                                                        style: TextStyle(
+                                                            fontSize: 22,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w500),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      ModalBottomSheetButton(
+                                                          label:
+                                                              'Move to Wishlist',
                                                           onPressed: () {
+                                                            context
+                                                                        .read<
+                                                                            WishList>()
+                                                                        .getWishListItems
+                                                                        .firstWhereOrNull((item) =>
+                                                                            item.documentId ==
+                                                                            product
+                                                                                .documentId) !=
+                                                                    null
+                                                                ? null
+                                                                : context
+                                                                    .read<
+                                                                        WishList>()
+                                                                    .addWishListItem(
+                                                                      product
+                                                                          .name,
+                                                                      product
+                                                                          .price,
+                                                                      product
+                                                                          .orderedQuantity,
+                                                                      product
+                                                                          .totalQuantity,
+                                                                      product
+                                                                          .imageUrl,
+                                                                      product
+                                                                          .documentId,
+                                                                      product
+                                                                          .supplierId,
+                                                                    );
+
                                                             context
                                                                 .read<Cart>()
                                                                 .removeProduct(
                                                                     product);
                                                             Navigator.pop(
                                                                 context);
-                                                          },
-                                                        ),
-                                                        ModalBottomSheetButton(
-                                                          label: 'Cancel',
-                                                          onPressed: () {
-                                                            Navigator.pop(
-                                                                context);
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
+                                                          }),
+                                                      ModalBottomSheetButton(
+                                                        label: 'Delete Item',
+                                                        onPressed: () {
+                                                          context
+                                                              .read<Cart>()
+                                                              .removeProduct(
+                                                                  product);
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                      ),
+                                                      ModalBottomSheetButton(
+                                                        label: 'Cancel',
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                      ),
+                                                    ],
                                                   ),
-                                                );
-                                              });
+                                                ),
+                                              );
+                                            },
+                                          );
                                         },
                                         icon: const Icon(
                                           Icons.delete_forever,

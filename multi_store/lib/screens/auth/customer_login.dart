@@ -1,8 +1,13 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:multi_store/providers/auth_repo.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
+import 'package:multi_store/widgets/repeated_divider.dart';
 
 class CustomerLoginScreen extends StatefulWidget {
   const CustomerLoginScreen({super.key});
@@ -17,6 +22,20 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late String email;
   late String password;
+  bool isSentEmailVerification = false;
+  bool isDocExists = false;
+
+  Future<bool> checkIfDocExists(docId) async {
+    try {
+      var doc = await FirebaseFirestore.instance
+          .collection("customers")
+          .doc(docId)
+          .get();
+      return doc.exists;
+    } catch (err) {
+      return false;
+    }
+  }
 
   void onSubmit() async {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -26,15 +45,23 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
         setState(() {
           isLogin = true;
         });
-        await FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
+        await AuthRepo.signInWithEmailAndPassword(email, password);
+        await AuthRepo.updateUserData();
+        if (await AuthRepo.checkEmailVerification()) {
+          _formKey.currentState!.reset();
+          setState(() {
+            isLogin = false;
+          });
 
-        _formKey.currentState!.reset();
-        setState(() {
-          isLogin = false;
-        });
-
-        Navigator.pushReplacementNamed(context, "/customer_home");
+          Navigator.pushReplacementNamed(context, "/customer_home");
+        } else {
+          MySnackBar.showSnackBar(
+              context: context, content: "Please Check your Inbox");
+          setState(() {
+            isSentEmailVerification = true;
+            isLogin = false;
+          });
+        }
       } on FirebaseAuthException catch (error) {
         setState(() {
           isLogin = false;
@@ -53,11 +80,49 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     }
   }
 
+  Future<UserCredential> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance
+        .signInWithCredential(credential)
+        .whenComplete(() async {
+      User user = FirebaseAuth.instance.currentUser!;
+      isDocExists = await checkIfDocExists(user.uid);
+      isDocExists == false
+          ? await FirebaseFirestore.instance
+              .collection('customers')
+              .doc(user.uid)
+              .set({
+              'name': user.displayName,
+              'email': user.email,
+              'profileimage': user.photoURL,
+              'phone': '',
+              'address': '',
+              'cid': user.uid
+            }).whenComplete(() =>
+                  Navigator.pushReplacementNamed(context, '/customer_home'))
+          : Navigator.pushReplacementNamed(context, '/customer_home');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // backgroundColor: const Color.fromARGB(255, 255, 239, 98),
-      backgroundColor: Colors.grey,
+      // backgroundColor: Colors.grey,
+      backgroundColor: const Color.fromARGB(255, 210, 210, 210),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -68,7 +133,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
               height: MediaQuery.of(context).size.height * 0.8,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -97,6 +162,22 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                       ],
                     ),
                   ),
+                  isSentEmailVerification
+                      ? ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              await FirebaseAuth.instance.currentUser!
+                                  .sendEmailVerification()
+                                  .whenComplete(() => MySnackBar.showSnackBar(
+                                      context: context,
+                                      content:
+                                          "Varification Email is Sent. Check your inbox."));
+                            } catch (err) {
+                              print(err);
+                            }
+                          },
+                          child: const Text("Resend Email Varification"))
+                      : const SizedBox(),
                   Form(
                     key: _formKey,
                     child: Padding(
@@ -109,7 +190,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                               hintText: 'Enter your email address',
                               border: OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
+                                    BorderRadius.all(Radius.circular(8.0)),
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
@@ -145,7 +226,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                               ),
                               border: const OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
+                                    BorderRadius.all(Radius.circular(8.0)),
                               ),
                             ),
                             keyboardType: TextInputType.text,
@@ -199,9 +280,49 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                       ),
                     ),
                   ),
+                  divider(),
+                  const SizedBox(height: 15),
+                  googleLogInButton(),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget divider() {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(width: 80, child: RepeatedDivider()),
+        Text("Or"),
+        SizedBox(width: 80, child: RepeatedDivider()),
+      ],
+    );
+  }
+
+  googleLogInButton() {
+    return SizedBox(
+      width: 220,
+      child: MaterialButton(
+        color: const Color.fromARGB(255, 230, 230, 230),
+        onPressed: signInWithGoogle,
+        child: const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                FontAwesomeIcons.google,
+              ),
+              SizedBox(width: 10),
+              Text(
+                "Sign In With Google",
+                style: TextStyle(fontSize: 15),
+              )
+            ],
           ),
         ),
       ),

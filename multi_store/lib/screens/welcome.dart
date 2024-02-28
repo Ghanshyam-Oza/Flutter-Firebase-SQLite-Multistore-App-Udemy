@@ -8,29 +8,26 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // backgroundColor: Colors.yellow.shade400,
-      backgroundColor: Colors.grey,
+      // backgroundColor: Colors.grey,
+      backgroundColor: const Color.fromARGB(255, 210, 210, 210),
       body: Center(
         child: Container(
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.7,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Column(
             children: [
-              const Image(
-                image: AssetImage('images/inapp/logo.jpg'),
-                height: 250,
-                width: 250,
+              Container(
+                padding: const EdgeInsets.only(top: 30, bottom: 30),
+                child: const Image(
+                  image: AssetImage('images/logo/logo.png'),
+                  height: 230,
+                  width: 250,
+                ),
               ),
-              // const Text(
-              //   "Welcome",
-              //   style: TextStyle(
-              //       fontSize: 34,
-              //       fontWeight: FontWeight.w700,
-              //       color: Color.fromARGB(255, 121, 119, 119)),
-              // ),
               SizedBox(
                 height: 60,
                 width: 200,

@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multi_store/providers/auth_repo.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 
 class CustomerSignUpScreen extends StatefulWidget {
@@ -39,15 +40,19 @@ class _CustomerSignUpScreenState extends State<CustomerSignUpScreen> {
         setState(() {
           isSignUp = true;
         });
-        await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+        await AuthRepo.signUpWithEmailAndPassword(email, password);
+
+        AuthRepo.sendEmailVerification();
 
         final ref = FirebaseStorage.instance.ref('customer-images/$email.jpg');
 
         await ref.putFile(File(userImage!.path));
         profileImage = await ref.getDownloadURL();
 
-        final _uid = FirebaseAuth.instance.currentUser!.uid;
+        final _uid = AuthRepo.uid;
+
+        AuthRepo.updateUserName(fullName);
+        AuthRepo.updateProfileImage(profileImage);
 
         await FirebaseFirestore.instance.collection('customers').doc(_uid).set({
           'name': fullName,
@@ -116,7 +121,8 @@ class _CustomerSignUpScreenState extends State<CustomerSignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // backgroundColor: const Color.fromARGB(255, 255, 239, 98),
-      backgroundColor: Colors.grey,
+      // backgroundColor: Colors.grey,
+      backgroundColor: const Color.fromARGB(255, 210, 210, 210),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -128,7 +134,7 @@ class _CustomerSignUpScreenState extends State<CustomerSignUpScreen> {
               height: MediaQuery.of(context).size.height * 0.8,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -221,7 +227,7 @@ class _CustomerSignUpScreenState extends State<CustomerSignUpScreen> {
                               hintText: 'Enter your full name',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
-                                  Radius.circular(12.0),
+                                  Radius.circular(8.0),
                                 ),
                               ),
                             ),
@@ -247,7 +253,7 @@ class _CustomerSignUpScreenState extends State<CustomerSignUpScreen> {
                               hintText: 'Enter your email address',
                               border: OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
+                                    BorderRadius.all(Radius.circular(8.0)),
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
@@ -283,7 +289,7 @@ class _CustomerSignUpScreenState extends State<CustomerSignUpScreen> {
                               ),
                               border: const OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
+                                    BorderRadius.all(Radius.circular(8.0)),
                               ),
                             ),
                             keyboardType: TextInputType.text,

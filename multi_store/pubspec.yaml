@@ -50,10 +50,20 @@ dependencies:
   sn_progress_dialog: ^1.1.3
   intl: ^0.19.0
   flutter_datetime_picker_plus: ^2.1.0
-
+  collection: ^1.18.0
+  path: ^1.8.3
+  flutter_stripe: ^10.0.0
+  http: ^1.2.0
+  flutter_rating_bar: ^4.0.1
+  expandable: ^5.0.1
+  country_state_city_picker: ^1.2.8
+  google_sign_in: ^6.2.1
+  introduction_screen: ^3.1.12
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -62,6 +72,9 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
 
+flutter_icons:
+  android: true
+  image_path: "images/logo/logo.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -86,6 +99,8 @@ flutter:
     - images/men/
     - images/shoes/
     - images/women/
+    - images/logo/
+    - images/onboarding/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

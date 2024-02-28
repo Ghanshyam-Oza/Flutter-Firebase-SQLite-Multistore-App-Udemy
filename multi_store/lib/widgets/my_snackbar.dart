@@ -10,7 +10,7 @@ class MySnackBar {
           content,
           style: const TextStyle(fontSize: 18),
         ),
-        duration: const Duration(milliseconds: 800),
+        duration: const Duration(milliseconds: 2000),
       ),
     );
   }

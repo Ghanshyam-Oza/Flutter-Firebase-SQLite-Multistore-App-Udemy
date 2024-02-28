@@ -3,6 +3,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_store/minor_screens/visit_store.dart';
+import 'package:multi_store/providers/auth_repo.dart';
 import 'package:multi_store/screens/dashboard_components/supplier_balance.dart';
 import 'package:multi_store/screens/dashboard_components/supplier_edit_profile.dart';
 import 'package:multi_store/screens/dashboard_components/supplier_manage_products.dart';
@@ -47,16 +48,16 @@ class SupplierDashboardScreen extends StatelessWidget {
         title: const Text("Logout Action"),
         content: const Text("Are you sure want to logout?"),
         actions: [
-          ElevatedButton(
+          TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
               child: const Text("No")),
-          ElevatedButton(
+          TextButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
-                await FirebaseAuth.instance.signOut();
+                await AuthRepo.logOut();
                 Navigator.pushReplacementNamed(context, '/welcome_screen');
               } on FirebaseAuthException catch (error) {
                 MySnackBar.showSnackBar(

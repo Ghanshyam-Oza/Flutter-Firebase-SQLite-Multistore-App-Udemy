@@ -2,44 +2,68 @@
 
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multi_store/utilities/categ_list.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
-import 'package:uuid/uuid.dart';
 
-class UploadScreen extends StatefulWidget {
-  const UploadScreen({super.key});
+class EditProductScreen extends StatefulWidget {
+  final dynamic product;
+  const EditProductScreen({super.key, required this.product});
 
   @override
-  State<UploadScreen> createState() => _UploadScreenState();
+  State<EditProductScreen> createState() => _EditProductScreenState();
 }
 
-class _UploadScreenState extends State<UploadScreen> {
+class _EditProductScreenState extends State<EditProductScreen> {
   late double price;
   late int quantity;
   int discount = 0;
   late String productName;
   late String productDesc;
   List<XFile>? productImages = [];
-  List<String> productUrlList = [];
+  List<dynamic> productUrlList = [];
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String mainCatValue = 'Select Category';
-  String subCatValue = 'Select Sub-Category';
   List<String> subCatList = [];
   bool isUploading = false;
+  String subCatValue = 'Select Sub-Category';
+  String mainCatValue = 'Select Category';
+
+  @override
+  void initState() {
+    super.initState();
+    mainCatValue = widget.product['mainCat'];
+    if (mainCatValue == 'men') {
+      subCatList = men;
+    } else if (mainCatValue == 'women') {
+      subCatList = women;
+    } else if (mainCatValue == 'shoes') {
+      subCatList = shoes;
+    } else if (mainCatValue == 'electronics') {
+      subCatList = electronics;
+    } else if (mainCatValue == 'accessories') {
+      subCatList = accessories;
+    } else if (mainCatValue == 'bags') {
+      subCatList = bags;
+    } else if (mainCatValue == 'home & garden') {
+      subCatList = home;
+    } else if (mainCatValue == 'kids') {
+      subCatList = kids;
+    } else if (mainCatValue == 'beauty') {
+      subCatList = beauty;
+    }
+    subCatValue = widget.product['subCat'];
+  }
 
   @override
   Widget build(BuildContext context) {
-    void onUpload() async {
+    void onSaveChanges() async {
       FocusManager.instance.primaryFocus?.unfocus();
 
       if (_formKey.currentState!.validate()) {
         _formKey.currentState!.save();
-
         if (productImages!.isNotEmpty) {
           try {
             setState(() {
@@ -53,29 +77,13 @@ class _UploadScreenState extends State<UploadScreen> {
               productUrlList.add(url);
             }
 
-            var productId = const Uuid().v4();
-            CollectionReference collectionReference =
-                FirebaseFirestore.instance.collection("products");
-            await collectionReference.doc(productId).set({
-              'productid': productId,
-              'mainCat': mainCatValue,
-              'subCat': subCatValue,
-              'price': price,
-              'instock': quantity,
-              'productname': productName,
-              'productdesc': productDesc,
-              'productimages': productUrlList,
-              'sid': FirebaseAuth.instance.currentUser!.uid,
-              'discount': discount,
-            });
-
             setState(() {
               isUploading = false;
-              productImages = [];
-              mainCatValue = 'Select Category';
-              subCatValue = 'Select Sub-Category';
-              subCatList = [];
-              productUrlList = [];
+              // productImages = [];
+              // mainCatValue = 'Select Category';
+              // subCatValue = 'Select Sub-Category';
+              // subCatList = [];
+              // productUrlList = [];
             });
           } catch (error) {
             setState(() {
@@ -85,12 +93,26 @@ class _UploadScreenState extends State<UploadScreen> {
                 context: context,
                 content: "Something went wrong. Please try again later.");
           }
-
-          _formKey.currentState!.reset();
         } else {
-          MySnackBar.showSnackBar(
-              context: context, content: "Please Pick Images First.");
+          productUrlList = widget.product['productimages'];
         }
+
+        FirebaseFirestore.instance.runTransaction((transaction) async {
+          DocumentReference documentReference = FirebaseFirestore.instance
+              .collection('products')
+              .doc(widget.product['productid']);
+
+          transaction.update(documentReference, {
+            'mainCat': mainCatValue,
+            'subCat': subCatValue,
+            'price': price,
+            'discount': discount,
+            'instock': quantity,
+            'productname': productName,
+            'productdesc': productDesc,
+            'productimages': productUrlList,
+          });
+        }).whenComplete(() => Navigator.pop(context));
       }
     }
 
@@ -108,7 +130,7 @@ class _UploadScreenState extends State<UploadScreen> {
       }
     }
 
-    Widget previewImages() {
+    Widget previewCurrentImages() {
       if (productImages!.isNotEmpty) {
         return ListView.builder(
             itemCount: productImages!.length,
@@ -119,7 +141,13 @@ class _UploadScreenState extends State<UploadScreen> {
               );
             });
       } else {
-        return const Center(child: Text("No images picked yet."));
+        List<dynamic> currentImages = widget.product['productimages'];
+        return ListView.builder(
+          itemCount: currentImages.length,
+          itemBuilder: (context, index) {
+            return Image.network(currentImages[index]);
+          },
+        );
       }
     }
 
@@ -149,6 +177,19 @@ class _UploadScreenState extends State<UploadScreen> {
       });
     }
 
+    deleteProduct() async {
+      setState(() {
+        isUploading = true;
+      });
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        DocumentReference documentReference = FirebaseFirestore.instance
+            .collection('products')
+            .doc(widget.product['productid']);
+
+        transaction.delete(documentReference);
+      }).whenComplete(() => Navigator.pop(context));
+    }
+
     return Scaffold(
       body: SafeArea(
         child: isUploading
@@ -166,20 +207,54 @@ class _UploadScreenState extends State<UploadScreen> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                   child: Column(
                     children: [
-                      Center(
-                        child: Container(
-                          clipBehavior: Clip.hardEdge,
-                          width: MediaQuery.of(context).size.width * 0.6,
-                          height: MediaQuery.of(context).size.width * 0.6,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: const Color.fromARGB(255, 250, 235, 93),
+                      Stack(
+                        children: [
+                          Center(
+                            child: Container(
+                                clipBehavior: Clip.hardEdge,
+                                width: MediaQuery.of(context).size.width * 0.6,
+                                height: MediaQuery.of(context).size.width * 0.6,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color:
+                                      const Color.fromARGB(255, 250, 235, 93),
+                                ),
+                                child: previewCurrentImages()),
                           ),
-                          child: productImages != null
-                              ? previewImages()
-                              : const Center(
-                                  child: Text("No images picked yet.")),
-                        ),
+                          Positioned(
+                            bottom: 8,
+                            right: 135,
+                            child: InkWell(
+                              onTap: pickImages,
+                              child: Container(
+                                height: 30,
+                                width: 90,
+                                decoration: BoxDecoration(
+                                  color: Colors.yellow,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Edit",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 5,
+                                    ),
+                                    Icon(
+                                      Icons.edit,
+                                      size: 20,
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(
                         height: 15,
@@ -200,17 +275,19 @@ class _UploadScreenState extends State<UploadScreen> {
                                 Expanded(
                                   child: DropdownButtonFormField(
                                     value: mainCatValue,
-                                    items: maincateg
-                                        .map<DropdownMenuItem<String>>((value) {
-                                      return DropdownMenuItem(
-                                        value: value,
-                                        child: Padding(
-                                          padding:
-                                              const EdgeInsets.only(left: 8.0),
-                                          child: Text(value),
-                                        ),
-                                      );
-                                    }).toList(),
+                                    items:
+                                        maincateg.map<DropdownMenuItem<String>>(
+                                      (value) {
+                                        return DropdownMenuItem(
+                                          value: value,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 8.0),
+                                            child: Text(value),
+                                          ),
+                                        );
+                                      },
+                                    ).toList(),
                                     onChanged: (value) {
                                       onSelectMainCategory(value);
                                     },
@@ -230,7 +307,7 @@ class _UploadScreenState extends State<UploadScreen> {
                             Row(
                               children: [
                                 const Text(
-                                  "Select Sub Category:  ",
+                                  "Select Sub Category: ",
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
@@ -275,6 +352,8 @@ class _UploadScreenState extends State<UploadScreen> {
                               children: [
                                 Expanded(
                                   child: TextFormField(
+                                    initialValue: widget.product['price']
+                                        .toStringAsFixed(2),
                                     decoration: InputDecoration(
                                       labelText: 'Price',
                                       hintText: '\$ 00.00',
@@ -304,6 +383,8 @@ class _UploadScreenState extends State<UploadScreen> {
                                 ),
                                 Expanded(
                                   child: TextFormField(
+                                    initialValue:
+                                        widget.product['discount'].toString(),
                                     decoration: InputDecoration(
                                       labelText: 'Discount %',
                                       hintText: '',
@@ -337,6 +418,8 @@ class _UploadScreenState extends State<UploadScreen> {
                               children: [
                                 Expanded(
                                   child: TextFormField(
+                                    initialValue:
+                                        widget.product['instock'].toString(),
                                     decoration: InputDecoration(
                                       labelText: 'Quantity',
                                       hintText: '',
@@ -365,6 +448,7 @@ class _UploadScreenState extends State<UploadScreen> {
                               height: 20,
                             ),
                             TextFormField(
+                              initialValue: widget.product['productname'],
                               maxLength: 100,
                               maxLines: 2,
                               decoration: InputDecoration(
@@ -389,6 +473,7 @@ class _UploadScreenState extends State<UploadScreen> {
                               height: 10,
                             ),
                             TextFormField(
+                              initialValue: widget.product['productdesc'],
                               maxLength: 800,
                               maxLines: 4,
                               decoration: InputDecoration(
@@ -409,6 +494,31 @@ class _UploadScreenState extends State<UploadScreen> {
                                 productDesc = newValue!;
                               },
                             ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                MaterialButton(
+                                  color: Colors.yellow,
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text("Cancel"),
+                                ),
+                                MaterialButton(
+                                  color: Colors.yellow,
+                                  onPressed: onSaveChanges,
+                                  child: const Text("Save Changes"),
+                                ),
+                                MaterialButton(
+                                  color: Colors.red,
+                                  onPressed: deleteProduct,
+                                  child: const Text(
+                                    "Delete",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            )
                           ],
                         ),
                       ),
@@ -417,54 +527,17 @@ class _UploadScreenState extends State<UploadScreen> {
                 ),
               ),
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            backgroundColor: const Color.fromARGB(255, 253, 237, 99),
-            onPressed: isUploading
-                ? null
-                : productImages!.isEmpty
-                    ? pickImages
-                    : () {
-                        setState(() {
-                          productImages = [];
-                        });
-                      },
-            child: productImages!.isEmpty
-                ? const Icon(
-                    Icons.photo_library,
-                    size: 30,
-                  )
-                : const Icon(
-                    Icons.delete_forever,
-                    size: 30,
-                  ),
-          ),
-          const SizedBox(
-            width: 20,
-          ),
-          FloatingActionButton(
-            backgroundColor: const Color.fromARGB(255, 253, 237, 99),
-            onPressed: isUploading ? null : onUpload,
-            child: const Icon(
-              Icons.upload,
-              size: 30,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
 
 extension Validator on String {
   bool isValidQuantity() {
-    return RegExp(r'^[1-9][0-9]*$').hasMatch(this);
+    return RegExp(r'^[0-9]*$').hasMatch(this);
   }
 
   bool isValidDiscount() {
-    return RegExp(r'^[1-9][0-9]?$').hasMatch(this);
+    return RegExp(r'^[0-9]*$').hasMatch(this);
   }
 
   bool isValidPrice() {

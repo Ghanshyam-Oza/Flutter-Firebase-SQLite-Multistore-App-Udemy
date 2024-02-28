@@ -1,10 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-class CustomerOrderModel extends StatelessWidget {
+class CustomerOrderModel extends StatefulWidget {
   const CustomerOrderModel({super.key, required this.order});
   final dynamic order;
 
+  @override
+  State<CustomerOrderModel> createState() => _CustomerOrderModelState();
+}
+
+class _CustomerOrderModelState extends State<CustomerOrderModel> {
+  double rate = 5;
+  String comment = '';
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -22,7 +32,7 @@ class CustomerOrderModel extends StatelessWidget {
                 SizedBox(
                   height: 80,
                   width: 80,
-                  child: Image.network(order['orderimage']),
+                  child: Image.network(widget.order['orderimage']),
                 ),
                 Flexible(
                   child: Padding(
@@ -32,7 +42,7 @@ class CustomerOrderModel extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          order['ordername'],
+                          widget.order['ordername'],
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -40,12 +50,12 @@ class CustomerOrderModel extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "\$ ${order['orderprice'].toStringAsFixed(2)}",
+                              "\$ ${widget.order['orderprice'].toStringAsFixed(2)}",
                               style: const TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.w600),
                             ),
                             Text(
-                              "X ${order['orderquantity'].toString()}",
+                              "X ${widget.order['orderquantity'].toString()}",
                               style: const TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.w600),
                             ),
@@ -64,7 +74,7 @@ class CustomerOrderModel extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("See more..."),
-                Text(order['deliverystatus'])
+                Text(widget.order['deliverystatus'])
               ],
             ),
           ),
@@ -73,7 +83,7 @@ class CustomerOrderModel extends StatelessWidget {
               // height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: order['deliverystatus'] == 'delivered'
+                color: widget.order['deliverystatus'] == 'delivered'
                     ? Colors.grey.withOpacity(0.1)
                     : Colors.yellow.withOpacity(0.4),
               ),
@@ -83,19 +93,19 @@ class CustomerOrderModel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Name: ${order['custname']}",
+                      "Name: ${widget.order['custname']}",
                       style: const TextStyle(fontSize: 16),
                     ),
                     Text(
-                      "Phone Number: ${order['phone']}",
+                      "Phone Number: ${widget.order['phone']}",
                       style: const TextStyle(fontSize: 16),
                     ),
                     Text(
-                      "Email Adress: ${order['email']}",
+                      "Email Adress: ${widget.order['email']}",
                       style: const TextStyle(fontSize: 16),
                     ),
                     Text(
-                      "Address: ${order['address']}",
+                      "Address: ${widget.order['address']}",
                       style: const TextStyle(fontSize: 16),
                     ),
                     Row(
@@ -105,7 +115,7 @@ class CustomerOrderModel extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         Text(
-                          order['paymentstatus'],
+                          widget.order['paymentstatus'],
                           style: const TextStyle(
                               fontSize: 16, color: Colors.purple),
                         ),
@@ -118,20 +128,20 @@ class CustomerOrderModel extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         Text(
-                          order['deliverystatus'],
+                          widget.order['deliverystatus'],
                           style: const TextStyle(
                               fontSize: 16, color: Colors.green),
                         ),
                       ],
                     ),
-                    order['deliverystatus'] == 'shipping'
+                    widget.order['deliverystatus'] == 'shipping'
                         ? Text(
-                            "Estimated Delivery Date: ${DateFormat('yyyy-MM-dd').format(order['deliverydate'].toDate())}",
+                            "Estimated Delivery Date: ${DateFormat('yyyy-MM-dd').format(widget.order['deliverydate'].toDate())}",
                             style: const TextStyle(fontSize: 16),
                           )
                         : const SizedBox(),
-                    order['deliverystatus'] == 'delivered' &&
-                            order['orderreview'] == true
+                    widget.order['deliverystatus'] == 'delivered' &&
+                            widget.order['orderreview'] == true
                         ? const Padding(
                             padding: EdgeInsets.only(top: 10, left: 10),
                             child: Row(
@@ -155,10 +165,181 @@ class CustomerOrderModel extends StatelessWidget {
                             ),
                           )
                         : const SizedBox(),
-                    order['deliverystatus'] == 'delivered' &&
-                            order['orderreview'] == false
+                    widget.order['deliverystatus'] == 'delivered' &&
+                            widget.order['orderreview'] == false
                         ? TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              showModalBottomSheet(
+                                isScrollControlled: true,
+                                context: context,
+                                builder: (context) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                            .viewInsets
+                                            .bottom),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 20),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text(
+                                            "What is you rate?",
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          RatingBar.builder(
+                                            initialRating: 5,
+                                            minRating: 1,
+                                            allowHalfRating: true,
+                                            itemBuilder: (context, _) {
+                                              return const Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
+                                              );
+                                            },
+                                            onRatingUpdate: (value) {
+                                              rate = value;
+                                            },
+                                          ),
+                                          const SizedBox(height: 30),
+                                          const Text(
+                                            "Please share your opinion \nabout the product",
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextField(
+                                            decoration: const InputDecoration(
+                                              hintText: 'Write Review',
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                            ),
+                                            maxLines: 6,
+                                            keyboardType: TextInputType.text,
+                                            onChanged: (value) {
+                                              comment = value;
+                                            },
+                                          ),
+                                          const SizedBox(height: 30),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              InkWell(
+                                                onTap: () async {
+                                                  final collectionReference =
+                                                      FirebaseFirestore.instance
+                                                          .collection(
+                                                              "products")
+                                                          .doc(widget.order[
+                                                              'productid'])
+                                                          .collection(
+                                                              "reviews");
+
+                                                  await collectionReference
+                                                      .doc(FirebaseAuth.instance
+                                                          .currentUser!.uid)
+                                                      .set({
+                                                    'name': widget
+                                                        .order['custname'],
+                                                    'email':
+                                                        widget.order['email'],
+                                                    'profileimage': widget
+                                                        .order['profileimage'],
+                                                    'rate': rate,
+                                                    'comment': comment,
+                                                  });
+
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .runTransaction(
+                                                          (transaction) {
+                                                    return FirebaseFirestore
+                                                        .instance
+                                                        .collection('orders')
+                                                        .doc(widget
+                                                            .order['orderid'])
+                                                        .update({
+                                                      'orderreview': true
+                                                    });
+                                                  });
+
+                                                  Future.delayed(const Duration(
+                                                          microseconds: 100))
+                                                      .whenComplete(() =>
+                                                          Navigator.pop(
+                                                              context));
+                                                },
+                                                child: Container(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.4,
+                                                  height: 40,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: Colors.yellow,
+                                                  ),
+                                                  child: const Center(
+                                                      child: Text(
+                                                    "Share Review",
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  )),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: 20,
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: Container(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.4,
+                                                  height: 40,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: Colors.yellow,
+                                                  ),
+                                                  child: const Center(
+                                                      child: Text(
+                                                    "Cancel",
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  )),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                             child: const Text(
                               "Write Review",
                               style: TextStyle(

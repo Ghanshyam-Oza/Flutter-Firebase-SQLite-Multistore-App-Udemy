@@ -40,12 +40,13 @@ class FakeSearch extends StatelessWidget {
             ),
             Container(
               height: 30,
-              width: 90,
+              // width: 90,
               decoration: BoxDecoration(
                 color: Colors.yellow,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Center(
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
                 child: Text(
                   "Search",
                   style: TextStyle(
