@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:multi_store/minor_screens/best_deals.dart';
 import 'package:multi_store/screens/welcome.dart';
 
 class OnBoardingPage extends StatefulWidget {
@@ -52,10 +53,12 @@ class OnBoardingPageState extends State<OnBoardingPage> {
             padding: const EdgeInsets.only(bottom: 30.0),
             child: MaterialButton(
               color: const Color.fromARGB(255, 254, 238, 86),
-              onPressed: () {},
+              onPressed: () {
+                _onIntroEnd(context);
+              },
               child: const Text(
                 "Let's go all the way",
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: Colors.black87),
               ),
             ),
           ),
@@ -63,40 +66,28 @@ class OnBoardingPageState extends State<OnBoardingPage> {
             PageViewModel(
               title: "Choose Product",
               body:
-                  "Instead of having to buy an entire share, invest any amount you want.",
-              image: _buildImage('images/onboarding/1.png'),
+                  "We have lots of products. Choose product from our application.",
+              image: _buildImage('images/onboarding/choose_product.png'),
               decoration: pageDecoration,
             ),
             PageViewModel(
-              title: "Learn as you go",
+              title: "Select\nPayment Method",
               body:
-                  "Download the Stockpile app and master the market with our mini-lesson.",
-              image: _buildImage('images/onboarding/2.png'),
+                  "Easy checkout and safe payment method. Trusted by customer all over the world.",
+              image: _buildImage('images/onboarding/payment_method.png'),
               decoration: pageDecoration,
             ),
             PageViewModel(
-              title: "Kids and teens",
+              title: "Track Your Order",
+              body: "Track your order status on one go inside your Profile",
+              image: _buildImage('images/onboarding/track_order.png'),
+              decoration: pageDecoration,
+            ),
+            PageViewModel(
+              title: "Fast Delivery",
               body:
-                  "Kids and teens can track their stocks 24/7 and place trades that you approve.",
-              image: _buildImage('images/onboarding/3.png'),
-              decoration: pageDecoration,
-            ),
-            PageViewModel(
-              title: "Another title page",
-              body: "Another beautiful body text for this example onboarding",
-              image: _buildImage('images/onboarding/1.png'),
-              footer: Padding(
-                padding:
-                    const EdgeInsets.only(left: 40.0, right: 40, bottom: 10),
-                child: MaterialButton(
-                  color: Colors.lightBlue,
-                  onPressed: () {},
-                  child: const Text(
-                    "Shop Now",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
+                  "Reliable and fast delivery. We deliver your product fastest way possible.",
+              image: _buildImage('images/onboarding/fast_delivery.png'),
               decoration: pageDecoration.copyWith(
                 bodyFlex: 6,
                 imageFlex: 6,
@@ -104,13 +95,25 @@ class OnBoardingPageState extends State<OnBoardingPage> {
               ),
             ),
             PageViewModel(
-              title: "Title of last page - reversed",
-              bodyWidget: const Row(
+              title: "Best Deals",
+              bodyWidget: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Click on ", style: bodyStyle),
-                  Icon(Icons.edit),
-                  Text(" to edit a post", style: bodyStyle),
+                  MaterialButton(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 10),
+                    color: Colors.blue,
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const BestDeals()));
+                    },
+                    child: const Text(
+                      "Check Best Deals",
+                      style: TextStyle(fontSize: 20, color: Colors.white),
+                    ),
+                  )
                 ],
               ),
               decoration: pageDecoration.copyWith(
@@ -119,7 +122,7 @@ class OnBoardingPageState extends State<OnBoardingPage> {
                 bodyAlignment: Alignment.bottomCenter,
                 imageAlignment: Alignment.topCenter,
               ),
-              image: _buildImage('images/onboarding/1.png'),
+              image: _buildImage('images/onboarding/best_deals.png'),
               reverse: true,
             ),
           ],
@@ -148,12 +151,6 @@ class OnBoardingPageState extends State<OnBoardingPage> {
               borderRadius: BorderRadius.all(Radius.circular(25.0)),
             ),
           ),
-          // dotsContainerDecorator: const ShapeDecoration(
-          //   color: Color.fromARGB(221, 255, 255, 255),
-          //   shape: RoundedRectangleBorder(
-          //     borderRadius: BorderRadius.all(Radius.circular(8.0)),
-          //   ),
-          // ),
         ),
       ),
     );

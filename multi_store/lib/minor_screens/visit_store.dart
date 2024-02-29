@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:multi_store/minor_screens/edit_store.dart';
 import 'package:multi_store/models/product_model.dart';
+import 'package:multi_store/widgets/appbar_title.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_tile.dart';
@@ -37,11 +38,17 @@ class _VisitStoreScreenState extends State<VisitStoreScreen> {
         }
 
         if (snapshot.hasData && !snapshot.data!.exists) {
-          return const Center(
-            child: Text(
-              "This Supplier has no item yet.",
-              style: TextStyle(fontSize: 18),
-              textAlign: TextAlign.center,
+          return Scaffold(
+            appBar: AppBar(
+              centerTitle: true,
+              title: const AppBarTitle(label: "Visit Store"),
+            ),
+            body: const Center(
+              child: Text(
+                "This Supplier has no item yet.\nAdd some items first.",
+                style: TextStyle(fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
             ),
           );
         }
