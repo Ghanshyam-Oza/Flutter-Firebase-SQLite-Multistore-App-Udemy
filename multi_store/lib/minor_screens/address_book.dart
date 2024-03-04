@@ -19,8 +19,8 @@ class AddressBookScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(sourcePage);
-    print(isFromAddAdress);
+    // print(sourcePage);
+    // print(isFromAddAdress);
     ProgressDialog progress = ProgressDialog(
       context: context,
     );
@@ -163,6 +163,30 @@ class AddressBookScreen extends StatelessWidget {
                                   });
                                 }
                                 transaction.delete(docReference);
+
+                                if (snapshot.data!.docs.length == 2) {
+                                  if (index == 0) {
+                                    addr = snapshot.data!.docs[1];
+                                  } else {
+                                    addr = snapshot.data!.docs[0];
+                                  }
+                                  DocumentReference docReference2 =
+                                      addr.reference;
+                                  transaction.update(docReference2, {
+                                    'default': true,
+                                  });
+
+                                  DocumentReference custDocReference2 =
+                                      FirebaseFirestore.instance
+                                          .collection("customers")
+                                          .doc(customer['cid']);
+
+                                  transaction.update(custDocReference2, {
+                                    'address':
+                                        "${addr['city']}, ${addr['state']}, ${addr['country']}",
+                                    'phone': addr['phone'],
+                                  });
+                                }
                               },
                             );
                           },

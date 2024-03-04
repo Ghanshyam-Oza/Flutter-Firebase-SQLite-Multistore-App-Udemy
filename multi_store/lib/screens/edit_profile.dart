@@ -270,6 +270,7 @@ class _EditProfileState extends State<EditProfile> {
                 ExpansionTile(
                   title: const Text("Add/Edit Address"),
                   children: [
+                    const SizedBox(height: 5),
                     TextFormField(
                       initialValue: addrFirstName,
                       decoration: const InputDecoration(

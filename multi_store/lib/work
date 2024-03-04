@@ -1,8 +1,4 @@
-- Address book (add_address) -  if not set default address set next added address to default/ or set last remaining address to default 
-
 - showing snackbar on clicking any product inside big deals page
-
-
 
 - two apps
   - customers, suppliers

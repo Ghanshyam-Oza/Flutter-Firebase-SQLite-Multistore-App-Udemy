@@ -35,6 +35,10 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               stateValue != 'Choose State' &&
               cityValue != 'Choose City')) {
         try {
+          var custSnapshot = await FirebaseFirestore.instance
+              .collection('customers')
+              .doc(widget.customer['cid'])
+              .get();
           var snapshot = await FirebaseFirestore.instance
               .collection('customers')
               .doc(widget.customer['cid'])
@@ -56,10 +60,12 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               'country': countryValue,
               'state': stateValue,
               'city': cityValue,
-              'default': snapshot.size == 0 ? true : false,
+              'default': snapshot.size == 0 || custSnapshot['address'] == ''
+                  ? true
+                  : false,
             },
           );
-          if (snapshot.size == 0) {
+          if (snapshot.size == 0 || custSnapshot['address'] == '') {
             FirebaseFirestore.instance.runTransaction(
               (transaction) async {
                 DocumentReference documentReference = FirebaseFirestore.instance
@@ -74,16 +80,18 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
             );
           }
 
-          Future.delayed(const Duration(microseconds: 100))
-              .whenComplete(() => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddressBookScreen(
-                      customer: widget.customer,
-                      sourcePage: widget.sourcePage,
-                      isFromAddAdress: true,
-                    ),
-                  )));
+          Future.delayed(const Duration(microseconds: 100)).whenComplete(
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddressBookScreen(
+                  customer: widget.customer,
+                  sourcePage: widget.sourcePage,
+                  isFromAddAdress: true,
+                ),
+              ),
+            ),
+          );
         } catch (err) {
           Future.delayed(const Duration(microseconds: 100)).whenComplete(
             () => MySnackBar.showSnackBar(
