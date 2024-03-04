@@ -46,7 +46,8 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               .collection('customers')
               .doc(widget.customer['cid'])
               .collection('addresses')
-              .add(
+              .doc(addressid)
+              .set(
             {
               'addressid': addressid,
               'firstname': firstName,

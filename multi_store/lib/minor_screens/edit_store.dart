@@ -249,7 +249,7 @@ class _EditStoreState extends State<EditStore> {
                   keyboardType: TextInputType.text,
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return 'Please enter store logo';
+                      return 'Please enter store name';
                     }
                     return null;
                   },

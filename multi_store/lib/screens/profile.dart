@@ -9,6 +9,7 @@ import 'package:multi_store/providers/auth_repo.dart';
 import 'package:multi_store/screens/cart.dart';
 import 'package:multi_store/screens/customer_screens/customer_orders.dart';
 import 'package:multi_store/screens/customer_screens/customer_wishlist.dart';
+import 'package:multi_store/screens/edit_profile.dart';
 import 'package:multi_store/widgets/my_snackbar.dart';
 import 'package:multi_store/widgets/profile_header.dart';
 import 'package:multi_store/widgets/repeated_divider.dart';
@@ -105,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SliverAppBar(
                     elevation: 0,
                     pinned: true,
-                    expandedHeight: 140,
+                    expandedHeight: 120,
                     backgroundColor: Colors.white,
                     flexibleSpace: LayoutBuilder(
                       builder: (context, constraints) {
@@ -134,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.only(
-                                      left: 40.0, top: 30.0, bottom: 10),
+                                      left: 40.0, top: 30.0),
                                   child: CircleAvatar(
                                     backgroundImage:
                                         NetworkImage(data['profileimage']),
@@ -165,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       children: [
                         Container(
-                          height: 80,
+                          height: 75,
                           width: MediaQuery.of(context).size.width * 0.9,
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -330,7 +331,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         RepeatedListTile(
                                           title: 'Edit Profile',
                                           icon: Icons.edit,
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        EditProfile(
+                                                            data: data)));
+                                          },
                                         ),
                                         const RepeatedDivider(),
                                         RepeatedListTile(

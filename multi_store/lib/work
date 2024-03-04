@@ -1,7 +1,8 @@
-- onboarding screen
+- Address book (add_address) -  if not set default address set next added address to default/ or set last remaining address to default 
 
--- Choose Product, Image: 
--- select payment method
--- Track your order
--- Fast Delivery
--- best deals
+- showing snackbar on clicking any product inside big deals page
+
+
+
+- two apps
+  - customers, suppliers
