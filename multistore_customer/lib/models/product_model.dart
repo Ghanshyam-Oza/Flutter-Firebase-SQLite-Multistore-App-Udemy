@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:multi_store/widgets/my_snackbar.dart';
+import 'package:multistore_customer/minor_screens/product_details.dart';
+import 'package:multistore_customer/providers/product.dart';
+import 'package:multistore_customer/providers/wish_list_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:collection/collection.dart';
 
-class BestDealsModel extends StatelessWidget {
-  const BestDealsModel({super.key, required this.product});
+class ProductModel extends StatelessWidget {
+  const ProductModel({super.key, required this.product});
   final dynamic product;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Navigator.pushReplacementNamed(context, '/welcome_screen');
-        MySnackBar.showSnackBar(
-            context: context, content: "Please Sign Up/Login First.");
-        Future.delayed(const Duration(seconds: 2)).whenComplete(() {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-              '/welcome_screen', (Route<dynamic> route) => false);
-        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(
+              product: product,
+            ),
+          ),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -100,21 +105,49 @@ class BestDealsModel extends StatelessWidget {
                             ),
                             IconButton(
                               onPressed: () {
-                                MySnackBar.showSnackBar(
-                                    context: context,
-                                    content: "Please Sign Up/Login First.");
-                                Future.delayed(const Duration(seconds: 2))
-                                    .whenComplete(() {
-                                  Navigator.of(context).pushNamedAndRemoveUntil(
-                                      '/welcome_screen',
-                                      (Route<dynamic> route) => false);
-                                });
+                                context
+                                            .read<WishList>()
+                                            .getWishListItems
+                                            .firstWhereOrNull((item) =>
+                                                item.documentId ==
+                                                product['productid']) !=
+                                        null
+                                    ? context
+                                        .read<WishList>()
+                                        .removeThis(product['productid'])
+                                    : context.read<WishList>().addWishListItem(
+                                        Product(
+                                            documentId: product['productid'],
+                                            name: product['productname'],
+                                            price: product['discount'] != 0
+                                                ? ((1 -
+                                                        product['discount'] /
+                                                            100) *
+                                                    product['price'])
+                                                : product['price'],
+                                            orderedQuantity: 1,
+                                            totalQuantity: product['instock'],
+                                            imageUrl: product['productimages']
+                                                [0],
+                                            supplierId: product['sid']));
                               },
-                              icon: const Icon(
-                                Icons.favorite_border_outlined,
-                                color: Colors.red,
-                                size: 25,
-                              ),
+                              icon: context
+                                          .watch<WishList>()
+                                          .getWishListItems
+                                          .firstWhereOrNull((item) =>
+                                              item.documentId ==
+                                              product['productid']) !=
+                                      null
+                                  ? const Icon(
+                                      Icons.favorite,
+                                      color: Colors.red,
+                                      size: 25,
+                                    )
+                                  : const Icon(
+                                      Icons.favorite_border_outlined,
+                                      color: Colors.red,
+                                      size: 25,
+                                    ),
                             ),
                           ],
                         ),

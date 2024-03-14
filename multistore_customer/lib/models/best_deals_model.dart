@@ -1,21 +1,26 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_store/widgets/my_snackbar.dart';
+import 'package:multistore_customer/minor_screens/product_details.dart';
+import 'package:multistore_customer/providers/product.dart';
+import 'package:multistore_customer/providers/wish_list_provider.dart';
+import 'package:provider/provider.dart';
 
-class BestDealsModel extends StatelessWidget {
+class BestDealsModel extends StatefulWidget {
   const BestDealsModel({super.key, required this.product});
   final dynamic product;
 
   @override
+  State<BestDealsModel> createState() => _BestDealsModelState();
+}
+
+class _BestDealsModelState extends State<BestDealsModel> {
+  @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Navigator.pushReplacementNamed(context, '/welcome_screen');
-        MySnackBar.showSnackBar(
-            context: context, content: "Please Sign Up/Login First.");
-        Future.delayed(const Duration(seconds: 2)).whenComplete(() {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-              '/welcome_screen', (Route<dynamic> route) => false);
-        });
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) =>
+                ProductDetailsScreen(product: widget.product)));
       },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -37,7 +42,7 @@ class BestDealsModel extends StatelessWidget {
                       constraints:
                           const BoxConstraints(minHeight: 100, maxWidth: 350),
                       child: Image(
-                        image: NetworkImage(product['productimages'][0]),
+                        image: NetworkImage(widget.product['productimages'][0]),
                       ),
                     ),
                   ),
@@ -47,7 +52,7 @@ class BestDealsModel extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          product['productname'],
+                          widget.product['productname'],
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -67,16 +72,18 @@ class BestDealsModel extends StatelessWidget {
                                     color: Colors.red,
                                   ),
                                 ),
-                                product['discount'] == 0
+                                widget.product['discount'] == 0
                                     ? Text(
-                                        product['price'].toStringAsFixed(2),
+                                        widget.product['price']
+                                            .toStringAsFixed(2),
                                         style: const TextStyle(
                                           fontSize: 16,
                                           color: Colors.red,
                                         ),
                                       )
                                     : Text(
-                                        product['price'].toStringAsFixed(2),
+                                        widget.product['price']
+                                            .toStringAsFixed(2),
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: Colors.grey,
@@ -85,11 +92,13 @@ class BestDealsModel extends StatelessWidget {
                                         ),
                                       ),
                                 const SizedBox(width: 5),
-                                product['discount'] == 0
+                                widget.product['discount'] == 0
                                     ? const SizedBox()
                                     : Text(
-                                        ((1 - product['discount'] / 100) *
-                                                product['price'])
+                                        ((1 -
+                                                    widget.product['discount'] /
+                                                        100) *
+                                                widget.product['price'])
                                             .toStringAsFixed(2),
                                         style: const TextStyle(
                                           fontSize: 16,
@@ -100,21 +109,49 @@ class BestDealsModel extends StatelessWidget {
                             ),
                             IconButton(
                               onPressed: () {
-                                MySnackBar.showSnackBar(
-                                    context: context,
-                                    content: "Please Sign Up/Login First.");
-                                Future.delayed(const Duration(seconds: 2))
-                                    .whenComplete(() {
-                                  Navigator.of(context).pushNamedAndRemoveUntil(
-                                      '/welcome_screen',
-                                      (Route<dynamic> route) => false);
-                                });
+                                context
+                                            .read<WishList>()
+                                            .getWishListItems
+                                            .firstWhereOrNull((item) =>
+                                                item.documentId ==
+                                                widget.product['productid']) !=
+                                        null
+                                    ? context
+                                        .read<WishList>()
+                                        .removeThis(widget.product['productid'])
+                                    : context.read<WishList>().addWishListItem(Product(
+                                        documentId: widget.product['productid'],
+                                        name: widget.product['productname'],
+                                        price: widget.product['discount'] != 0
+                                            ? ((1 -
+                                                    widget.product['discount'] /
+                                                        100) *
+                                                widget.product['price'])
+                                            : widget.product['price'],
+                                        orderedQuantity: 1,
+                                        totalQuantity:
+                                            widget.product['instock'],
+                                        imageUrl:
+                                            widget.product['productimages'][0],
+                                        supplierId: widget.product['sid']));
                               },
-                              icon: const Icon(
-                                Icons.favorite_border_outlined,
-                                color: Colors.red,
-                                size: 25,
-                              ),
+                              icon: context
+                                          .watch<WishList>()
+                                          .getWishListItems
+                                          .firstWhereOrNull((item) =>
+                                              item.documentId ==
+                                              widget.product['productid']) !=
+                                      null
+                                  ? const Icon(
+                                      Icons.favorite,
+                                      color: Colors.red,
+                                      size: 30,
+                                    )
+                                  : const Icon(
+                                      Icons.favorite_border_outlined,
+                                      color: Colors.red,
+                                      size: 30,
+                                    ),
                             ),
                           ],
                         ),
@@ -123,7 +160,7 @@ class BestDealsModel extends StatelessWidget {
                   ),
                 ],
               ),
-              product['discount'] != 0
+              widget.product['discount'] != 0
                   ? Positioned(
                       top: 45,
                       left: 0,
@@ -137,7 +174,7 @@ class BestDealsModel extends StatelessWidget {
                                 bottomRight: Radius.circular(15))),
                         child: Center(
                             child: Text(
-                                "Save ${product['discount'].toString()} %")),
+                                "Save ${widget.product['discount'].toString()} %")),
                       ),
                     )
                   : const SizedBox(),
