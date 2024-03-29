@@ -8,6 +8,7 @@ import 'package:multistore_customer/widgets/my_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_tile.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VisitStoreScreen extends StatefulWidget {
   final String supplierId;
@@ -20,6 +21,39 @@ class VisitStoreScreen extends StatefulWidget {
 class _VisitStoreScreenState extends State<VisitStoreScreen> {
   bool isFollowing = false;
   List<String> subscriptionList = [];
+  String? phoneNumber;
+
+  contactViaWhatsapp() async {
+    var countryCode = "+91";
+
+    if (phoneNumber != null) {
+      try {
+        Uri url =
+            Uri.parse("whatsapp://send?phone=${countryCode + phoneNumber!}");
+        // if (await canLaunchUrl(url)) {
+        launchUrl(url);
+        // } else {
+        //   Future.delayed(const Duration(microseconds: 100)).whenComplete(() {
+        //     MySnackBar.showSnackBar(
+        //         context: context,
+        //         content: "Can't open whatsapp. Please try again later");
+        //   });
+        // }
+      } catch (err) {
+        Future.delayed(const Duration(microseconds: 100)).whenComplete(() {
+          MySnackBar.showSnackBar(
+              context: context,
+              content: "Something went wrong. Please try again later");
+        });
+      }
+    } else {
+      Future.delayed(const Duration(microseconds: 100)).whenComplete(() {
+        MySnackBar.showSnackBar(
+            context: context,
+            content: "Supplier haven't provide their contact detail.");
+      });
+    }
+  }
 
   checkUserFollowing() async {
     await FirebaseFirestore.instance
@@ -111,6 +145,11 @@ class _VisitStoreScreenState extends State<VisitStoreScreen> {
         if (snapshot.connectionState == ConnectionState.done) {
           Map<String, dynamic> data =
               snapshot.data!.data() as Map<String, dynamic>;
+
+          if (data['phone'] != '') {
+            phoneNumber = data['phone'];
+          }
+
           return Scaffold(
             backgroundColor: Colors.grey.shade100,
             appBar: AppBar(
@@ -219,7 +258,7 @@ class _VisitStoreScreenState extends State<VisitStoreScreen> {
             ),
             floatingActionButton: FloatingActionButton(
               backgroundColor: Colors.green,
-              onPressed: () {},
+              onPressed: contactViaWhatsapp,
               child: const Icon(
                 FontAwesomeIcons.whatsapp,
                 color: Colors.white,
