@@ -29,15 +29,16 @@ class _VisitStoreScreenState extends State<VisitStoreScreen> {
       try {
         Uri url =
             Uri.parse("whatsapp://send?phone=${countryCode + phoneNumber!}");
-        if (await canLaunchUrl(url)) {
-          launchUrl(url);
-        } else {
-          Future.delayed(const Duration(microseconds: 100)).whenComplete(() {
-            MySnackBar.showSnackBar(
-                context: context,
-                content: "Can't open whatsapp. Please try again later");
-          });
-        }
+        // Uri.parse("whatsapp://send?phone=+919106369312");
+        // if (await canLaunchUrl(url)) {
+        launchUrl(url);
+        // } else {
+        //   Future.delayed(const Duration(microseconds: 100)).whenComplete(() {
+        //     MySnackBar.showSnackBar(
+        //         context: context,
+        //         content: "Can't open whatsapp. Please try again later");
+        //   });
+        // }
       } catch (err) {
         Future.delayed(const Duration(microseconds: 100)).whenComplete(() {
           MySnackBar.showSnackBar(
